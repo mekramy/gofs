@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 )
 
 type flexible struct {
@@ -13,6 +14,7 @@ type flexible struct {
 }
 
 func (fxs flexible) Exists(path string) (bool, error) {
+	path = normalizePath(path)
 	info, err := fs.Stat(fxs.files, path)
 	if os.IsNotExist(err) {
 		return false, nil
@@ -24,15 +26,20 @@ func (fxs flexible) Exists(path string) (bool, error) {
 }
 
 func (fxs flexible) Open(path string) (fs.File, error) {
+	path = normalizePath(path)
 	return fxs.files.Open(path)
 }
 
 func (fxs flexible) ReadFile(path string) ([]byte, error) {
+	path = normalizePath(path)
 	return fs.ReadFile(fxs.files, path)
 }
 
 func (fxs flexible) Find(dir, pattern string) (*string, error) {
 	var result string
+
+	// Normalize
+	dir = normalizePath(dir)
 
 	// Create regex
 	rx, err := regexp.Compile(pattern)
@@ -47,7 +54,7 @@ func (fxs flexible) Find(dir, pattern string) (*string, error) {
 		}
 
 		if !entry.IsDir() && rx.MatchString(entry.Name()) {
-			result = path
+			result = normalizePath(path)
 			return fs.SkipAll
 		}
 
@@ -70,6 +77,10 @@ func (fxs flexible) Search(dir, phrase, ignore, ext string) (*string, error) {
 	var rxFind *regexp.Regexp
 	var rxSkip *regexp.Regexp = nil
 
+	// Normalize
+	dir = normalizePath(dir)
+	ext = strings.TrimLeft(ext, ".")
+
 	// Create find regex
 	if ext == "" {
 		rxFind, err = regexp.Compile(phrase + ".*")
@@ -83,9 +94,9 @@ func (fxs flexible) Search(dir, phrase, ignore, ext string) (*string, error) {
 	// Create skip regex
 	if ignore != "" {
 		rxSkip, err = regexp.Compile(".*" + ignore + ".*")
-	}
-	if err != nil {
-		return nil, errors.New("invalid ignore pattern")
+		if err != nil {
+			return nil, errors.New("invalid ignore pattern")
+		}
 	}
 
 	// Search for file
@@ -97,7 +108,7 @@ func (fxs flexible) Search(dir, phrase, ignore, ext string) (*string, error) {
 		if !entry.IsDir() &&
 			rxFind.MatchString(entry.Name()) &&
 			(rxSkip == nil || !rxSkip.MatchString(entry.Name())) {
-			result = path
+			result = normalizePath(path)
 			return fs.SkipAll
 		}
 
@@ -117,6 +128,9 @@ func (fxs flexible) Search(dir, phrase, ignore, ext string) (*string, error) {
 func (fxs flexible) Lookup(dir, pattern string) ([]string, error) {
 	var result []string
 
+	// Normalize
+	dir = normalizePath(dir)
+
 	// Create regex
 	rx, err := regexp.Compile(pattern)
 	if err != nil {
@@ -130,7 +144,7 @@ func (fxs flexible) Lookup(dir, pattern string) ([]string, error) {
 		}
 
 		if !entry.IsDir() && rx.MatchString(entry.Name()) {
-			result = append(result, path)
+			result = append(result, normalizePath(path))
 		}
 
 		return nil

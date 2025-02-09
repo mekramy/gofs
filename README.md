@@ -16,6 +16,8 @@ go get github.com/mekramy/gofs
 
 You can create a `FlexibleFS` instance using either the local file system or an embedded file system.
 
+**NOTE:** FlexibleFS use `/` as path separator.
+
 #### Using Local File System
 
 ```go
