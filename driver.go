@@ -13,9 +13,9 @@ type flexible struct {
 	files fs.FS
 }
 
-func (fxs flexible) Exists(path string) (bool, error) {
+func (f flexible) Exists(path string) (bool, error) {
 	path = normalizePath(path)
-	info, err := fs.Stat(fxs.files, path)
+	info, err := fs.Stat(f.files, path)
 	if os.IsNotExist(err) {
 		return false, nil
 	} else if err != nil {
@@ -25,17 +25,17 @@ func (fxs flexible) Exists(path string) (bool, error) {
 	}
 }
 
-func (fxs flexible) Open(path string) (fs.File, error) {
+func (f flexible) Open(path string) (fs.File, error) {
 	path = normalizePath(path)
-	return fxs.files.Open(path)
+	return f.files.Open(path)
 }
 
-func (fxs flexible) ReadFile(path string) ([]byte, error) {
+func (f flexible) ReadFile(path string) ([]byte, error) {
 	path = normalizePath(path)
-	return fs.ReadFile(fxs.files, path)
+	return fs.ReadFile(f.files, path)
 }
 
-func (fxs flexible) Find(dir, pattern string) (*string, error) {
+func (f flexible) Find(dir, pattern string) (*string, error) {
 	var result string
 
 	// Normalize
@@ -48,7 +48,7 @@ func (fxs flexible) Find(dir, pattern string) (*string, error) {
 	}
 
 	// Search for file
-	err = fs.WalkDir(fxs.files, dir, func(path string, entry fs.DirEntry, err error) error {
+	err = fs.WalkDir(f.files, dir, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -71,7 +71,7 @@ func (fxs flexible) Find(dir, pattern string) (*string, error) {
 	return &result, nil
 }
 
-func (fxs flexible) Search(dir, phrase, ignore, ext string) (*string, error) {
+func (f flexible) Search(dir, phrase, ignore, ext string) (*string, error) {
 	var result string
 	var err error
 	var rxFind *regexp.Regexp
@@ -100,7 +100,7 @@ func (fxs flexible) Search(dir, phrase, ignore, ext string) (*string, error) {
 	}
 
 	// Search for file
-	err = fs.WalkDir(fxs.files, dir, func(path string, entry fs.DirEntry, err error) error {
+	err = fs.WalkDir(f.files, dir, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -125,7 +125,7 @@ func (fxs flexible) Search(dir, phrase, ignore, ext string) (*string, error) {
 	return &result, nil
 }
 
-func (fxs flexible) Lookup(dir, pattern string) ([]string, error) {
+func (f flexible) Lookup(dir, pattern string) ([]string, error) {
 	var result []string
 
 	// Normalize
@@ -138,7 +138,7 @@ func (fxs flexible) Lookup(dir, pattern string) ([]string, error) {
 	}
 
 	// Search for file
-	err = fs.WalkDir(fxs.files, dir, func(path string, entry fs.DirEntry, err error) error {
+	err = fs.WalkDir(f.files, dir, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -160,10 +160,10 @@ func (fxs flexible) Lookup(dir, pattern string) ([]string, error) {
 	return result, nil
 }
 
-func (fxs flexible) FS() fs.FS {
-	return fxs.files
+func (f flexible) FS() fs.FS {
+	return f.files
 }
 
-func (fxs flexible) Http() http.FileSystem {
-	return http.FS(fxs.files)
+func (f flexible) Http() http.FileSystem {
+	return http.FS(f.files)
 }
